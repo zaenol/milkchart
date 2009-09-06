@@ -1,0 +1,14 @@
+#summary Usage examples
+
+= Syntax =
+
+var chart = new MilkChart(table, [options]);
+
+= Arguments =
+
+ 1. table - (mixed) a table Element (or its id) that should be transformed
+ 1. options - (object, optional) a key/value set of options
+
+= Options =
+
+ * key - (int) value
