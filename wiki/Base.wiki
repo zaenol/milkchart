@@ -1,5 +1,7 @@
 #summary Base class
 
+The base class used for all MooCharts.  It is meant to be an abstract class, but will default to Column if used by itself.  Please see below for all chart types available.
+
 = Syntax =
 
 {{{
