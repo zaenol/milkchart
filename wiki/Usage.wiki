@@ -2,7 +2,7 @@
 
 = Syntax =
 
-var chart = new MilkChart(table, [options]);
+`var chart = new MilkChart(table, [options])`
 
 = Arguments =
 
