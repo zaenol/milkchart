@@ -3,7 +3,7 @@
 = Syntax =
 
 {{{
-var chart = new MilkChart.Class(table[, options]);
+var chart = new MilkChart(table[, options]);
 }}}
 
 * Note: This script will default to the [Column] type graph
