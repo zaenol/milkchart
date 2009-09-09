@@ -2,7 +2,9 @@
 
 = Syntax =
 
-`var chart = new MilkChart(table, [options])`
+{{{
+var chart = new MilkChart.Class(table, [options])
+}}}
 
 = Arguments =
 
@@ -12,3 +14,11 @@
 = Options =
 
  * key - (int) value
+
+= Classes =
+
+ * [Column]
+ * [Bar]
+ * [Line]
+ * [Scatter]
+ * [Pie]
