@@ -1,9 +1,9 @@
-#summary Options for Line
+#summary Options for Scatter
 
 = Syntax =
 
 {{{
-var chart = new MilkChart.Column(table, [options])
+var chart = new MilkChart.Scatter(table, [options])
 }}}
 
 = Arguments =
