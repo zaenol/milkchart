@@ -6,6 +6,8 @@
 var chart = new MilkChart.Class(table, [options])
 }}}
 
+* Note: This script will default to the [Column] type graph
+
 = Arguments =
 
  1. table - (mixed) a table Element (or its id) that should be transformed
