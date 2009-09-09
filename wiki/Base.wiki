@@ -3,7 +3,7 @@
 = Syntax =
 
 {{{
-var chart = new MilkChart.Class(table, [options])
+var chart = new MilkChart.Class(table[, options]);
 }}}
 
 * Note: This script will default to the [Column] type graph
@@ -15,7 +15,26 @@ var chart = new MilkChart.Class(table, [options])
 
 = Options =
 
- * key - (int) value
+ * width - (int: Defaults to 400) Width of chart in px
+ * height - (int: Defaults to 280) Height of chart in px
+ * padding - (int: Defaults to 12) Outer padding of chart in px
+ * font - (string: Defaults to "Verdana") Font to be used for labels
+ * fontColor - ([http://mootools.net/docs/more/Utilities/Color Color]: Defaults to #000000) Color used for labels
+ * fontSize - (int: Defaults to 10) Font size in pt
+ * background - ([http://mootools.net/docs/more/Utilities/Color Color]: Defaults to #ffffff) Background color of chart
+ * chartLineColor - ([http://mootools.net/docs/more/Utilities/Color Color]: Defaults to #333333) Color of value lines
+ * chartLineWeight - (int: Defaults to 1) Line Wieght of value lines in px
+ * border - (bool: Defaults to true) Draws a border around edge chart (ignores padding)
+ * borderWeight - (int: Defaults to 1) Border width in px
+ * borderColor - ([http://mootools.net/docs/more/Utilities/Color Color]: Defaults to #333333) Border color
+ * titleSize - (int: Defaults to 18) Size of title font in pt
+ * titleFont - (string: Defaults to "Verdana") Font used for title
+ * titleColor - ([http://mootools.net/docs/more/Utilities/Color Color]: Defaults to #000000) Font color for title
+ * showRowNames - (bool: Defaults to true) Show the row labels on one of the axes
+ * showValues - (bool: Defaults to true) Show values on one of the axes
+ * showKey - (bool: Defaults to true) Shows the column labels
+ * useZero - (bool: Defaults to true) Always use 0 as the lowest value
+ * useFooter - (bool: Defaults to true) Get row labels from table footer
 
 = Classes =
 
