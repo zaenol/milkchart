@@ -3,7 +3,7 @@
 = Syntax =
 
 {{{
-var chart = new MilkChart.Column(table, [options])
+var chart = new MilkChart.Bar(table, [options])
 }}}
 
 = Arguments =
