@@ -1,9 +1,11 @@
 #summary Options for Scatter
 
+This is essentially the same as the [Line] graph, but different options enabled for convenience.
+
 = Syntax =
 
 {{{
-var chart = new MilkChart.Scatter(table, [options])
+var chart = new MilkChart.Scatter(table[, options])
 }}}
 
 = Arguments =
