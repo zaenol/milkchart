@@ -1,9 +1,11 @@
 #summary Options for Pie
 
+The pie chart will draw a circle with the different rows as percentages of the circle.  This will only transform the first column of the tab;e supplied and ignore any others.
+
 = Syntax =
 
 {{{
-var chart = new MilkChart.Pie(table, [options])
+var chart = new MilkChart.Pie(table[, options])
 }}}
 
 = Arguments =
@@ -13,4 +15,6 @@ var chart = new MilkChart.Pie(table, [options])
 
 = Options =
 
- * key - (int) value
+ * shadow - (bool: Defaults to false) Draw a shadow under the pie chart
+ * stroke - (bool Defaults to true) Stroke the pie chart
+ * strokeWidth - (int: Defaults to 2) Stroke weight in px
