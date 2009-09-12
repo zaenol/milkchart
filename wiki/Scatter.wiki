@@ -2,6 +2,8 @@
 
 This is essentially the same as the [Line] graph, but different options enabled for convenience.
 
+http://img17.imageshack.us/img17/9756/scatter.jpg
+
 = Syntax =
 
 {{{
