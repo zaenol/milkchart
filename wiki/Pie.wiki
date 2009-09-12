@@ -2,6 +2,8 @@
 
 The pie chart will draw a circle with the different rows as percentages of the circle.  This will only transform the first column of the tab;e supplied and ignore any others.
 
+http://img21.imageshack.us/img21/8982/pien.jpg
+
 = Syntax =
 
 {{{
