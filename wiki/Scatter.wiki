@@ -15,4 +15,6 @@ var chart = new MilkChart.Scatter(table[, options])
 
 = Options =
 
- * key - (int) value
+ * showTicks - (bool:Defaults to true) Draw tick marks at each value
+ * showLines - (bool:Defaults to false) Draw lines connecting values
+ * lineWeight - (int: Defaults to 3) Line weight in px
