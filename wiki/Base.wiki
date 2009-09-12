@@ -5,7 +5,13 @@ The base class used for all Milk Charts.  It is meant to be an abstract class, b
 = Syntax =
 
 {{{
-var chart = new MilkChart(table[, options]);
+<script type="text/javascript" src="mootoolsCore.js"></script>
+
+<script type="text/javascript">
+    window.addEvent('domready', function() {
+        var chart = new MilkChart(table[, options]);
+    })
+</script>
 }}}
 
 * Note: This script will default to the [Column] type graph
