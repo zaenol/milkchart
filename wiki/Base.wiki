@@ -6,6 +6,7 @@ The base class used for all Milk Charts.  It is meant to be an abstract class, b
 
 {{{
 <script type="text/javascript" src="mootoolsCore.js"></script>
+<script type="text/javascript" src="MilkChart.js"></script>
 
 <script type="text/javascript">
     window.addEvent('domready', function() {
