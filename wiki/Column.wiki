@@ -13,4 +13,4 @@ var chart = new MilkChart.Column(table, [options])
 
 = Options =
 
- * key - (int) value
+ * No additional options
