@@ -1,5 +1,7 @@
 #summary Options for Bar
 
+http://img7.yfrog.com/img7/2991/barmr.jpg
+
 = Syntax =
 
 {{{
