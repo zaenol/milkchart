@@ -15,6 +15,10 @@ var chart = new MilkChart.Pie(table[, options])
 
 = Options =
 
- * shadow - (bool: Defaults to false) Draw a shadow under the pie chart
  * stroke - (bool Defaults to true) Stroke the pie chart
- * strokeWidth - (int: Defaults to 2) Stroke weight in px
+ * strokeWeight - (int: Defaults to 2) Stroke weight in px
+ * strokeColor - (Color: Defaults to #000000) Font color on pie slices
+ * shadow - (bool: Defaults to false) Draw a shadow under the pie chart
+ * showPercentages - (bool: Defaults to true) Draw slice percentage
+ * chartLineWeight - (int: Defaults to 2) Outline line weight in px
+ * pieBorder - (bool: Defaults to false) Draw a border around pie
