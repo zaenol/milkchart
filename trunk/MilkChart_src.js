@@ -106,11 +106,13 @@ var MilkChart = new Class({
         this.bounds[0].y += this.options.padding;
         this.bounds[1].x -= this.options.padding;
         this.bounds[1].y -= this.options.padding;
+		
+		this.bounds[1].y -= this.rowPadding;
         
         if (this.options.showKey) {
             // Apply key padding
             this.bounds[1].x -= this.keyPadding;
-            this.bounds[1].y -= this.rowPadding;
+            
             // Set key bounds
             this.keyBounds = [
                 new Point(this.bounds[1].x*1.02, this.bounds[0].y),
@@ -338,15 +340,18 @@ MilkChart.Column = new Class({
         this.bounds[1].x -= this.options.padding;
         this.bounds[1].y -= this.options.padding;
         
-        // Apply key padding
-        this.bounds[1].x -= this.keyPadding;
         this.bounds[1].y -= this.rowPadding;
         
-        // Set key bounds
-        this.keyBounds = [
-            new Point(this.bounds[1].x*1.02, this.bounds[0].y),
-            new Point(this.bounds[1].x*.5, this.bounds[1].y)
-        ];
+        if (this.options.showKey) {
+            // Apply key padding
+            this.bounds[1].x -= this.keyPadding;
+            
+            // Set key bounds
+            this.keyBounds = [
+                new Point(this.bounds[1].x*1.02, this.bounds[0].y),
+                new Point(this.bounds[1].x*.5, this.bounds[1].y)
+            ];
+        }
         
         if (this.options.title) {
             titleHeight = this.bounds[0].y + this.height * .1;
