@@ -38,7 +38,8 @@ The base class used for all Milk Charts.  It is meant to be an abstract class, b
 </table>
 }}}
 
-* Note: This script will default to the [Column] type graph
+ * Note: This script will default to the [Column] type graph
+ * Note: The `tfoot` is not required but MilkChart uses this to gather row names.  If the `<table>` does not have a `<tfoot>` then no row names are shown
 
 = Arguments =
 
