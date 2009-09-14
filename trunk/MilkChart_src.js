@@ -29,19 +29,23 @@
  *  07/24/09
  */
 
+// Add our namespace
+var MilkChart;
+
 // Simple Point class
 var Point = new Class({
     initialize: function(x,y) {
         this.x = x || 0;
         this.y = y || 0;
     }
-})
+});
 
-var MilkChart = new Class({
+MilkChart = new Class({
     Implements: Options,
     options: {
         width: 480,
         height: 290,
+		colors: ['#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4198af', '#db843d', '#93a9cf', '#d19392', '#b9cd96', '#a99bbd'],
         padding: 12,
         font: "Verdana",
         fontColor: "#000000",
@@ -81,8 +85,12 @@ var MilkChart = new Class({
         this.chartHeight = 0;
         this.keyPadding = this.width * .2;
         this.rowPadding = this.height * .1;
-        this.styles = new MilkChart.Styles();
-        
+		this.colors = this.__getColors(this.options.colors);
+		this.shapes = [];
+		// This could be done in a list, but an object is more readable
+        MilkChart.Shapes.each(function(shape) {
+            this.shapes.push(shape);
+        }.bind(this));
     },
     prepareCanvas: function() {
         this.element.setStyle('display', 'none');
@@ -129,9 +137,6 @@ var MilkChart = new Class({
         
         this.chartWidth = this.bounds[1].x - this.bounds[0].x;
         this.chartHeight = this.bounds[1].y - this.bounds[0].y;
-        
-        // Set row width
-        this.rowWidth = this.chartWidth / this.rows[0].length;
     },
     drawTitle: function() {
 		titleHeightRatio = 1.25;
@@ -202,11 +207,12 @@ var MilkChart = new Class({
         }
     },
     getData: function() {
-        // Abstract
         /**********************************
          * This function should be overridden for each new graph type as the data
          * is represented different for the different graphs.
          *********************************/
+		
+		return null;
     },
     
     draw: function() {
@@ -215,6 +221,8 @@ var MilkChart = new Class({
          * This function should be overridden for each new graph type as the data
          * is represented different for the different graphs.
          *********************************/
+		
+		return null;
     },
     drawKey: function() {
         // Abstract
@@ -222,76 +230,31 @@ var MilkChart = new Class({
          * This function should be overridden for each new graph type.  The keys are
          * similar but the icons that represent the columns are not.
          *********************************/
-    }
-});
-
-MilkChart.Styles = new Class({
-    /**********************************
-    * Override this object with any object that implements:
-    * colors: Array - color values
-    *  - Can be RGB, RGBa, Named, etc
-    * shapes: Array - functions that draw shapes
-    *  - Takes (context, x, y, size, color)
-    *********************************/
-    Implements: Options,
-    initialize: function() {
-        this.colors = ['#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4198af', '#db843d', '#93a9cf', '#d19392', '#b9cd96', '#a99bbd'];
-        this.shapes = [];
-        this.__shapes.each(function(shape) {
-            this.shapes.push(shape);
-        }.bind(this));
+		
+		return null;
     },
-    __shapes: new Hash({
-        square: function(ctx, x, y, size, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x-(size/2), y-(size/2), size, size);
-        },
-        circle: function(ctx, x, y, size, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, size/2, 0, (Math.PI/180)*360, true);
-            ctx.closePath();
-            ctx.fill();
-        },
-        triangle: function(ctx, x,y,size,color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            x -= size/2;
-            y -= size/2;
-            lr = new Point(x+size, y+size);
-            ctx.moveTo(x, lr.y);
-            ctx.lineTo(x + (size/2), y);
-            ctx.lineTo(lr.x, lr.y);
-            ctx.closePath();
-            ctx.fill();
-        },
-        cross: function(ctx,x,y,size,color) {
-            x -= size/2;
-            y -= size/2;
-            ctx.strokeStyle = color;
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(x,y);
-            ctx.lineTo(x+size, y+size);
-            ctx.moveTo(x,y+size);
-            ctx.lineTo(x+size,y);
-            ctx.closePath();
-            ctx.stroke();
-        },
-        diamond: function(ctx,x,y,size,color) {
-            x -= size/2;
-            y -= size/2;
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.moveTo(x+(size/2), y);
-            ctx.lineTo(x+size,y+(size/2));
-            ctx.lineTo(x+(size/2),y+size);
-            ctx.lineTo(x, y+(size/2));
-            ctx.closePath();
-            ctx.fill();
-        }
-    }),
-})
+	__getColors: function(clr) {
+		/**********************************
+		 * This accepts a single color to be a monochromatic gradient,
+		 * two colors as a gradient between the two,
+		 * or use the default colors.
+		 * 
+		 * Keyword args may be implemented for convenience.
+		 */
+		if (clr.length == 1) {
+			// Monochrome
+		}
+		else if (clr.length == 2) {
+			// Gradient
+		}
+		else {
+			//Use default
+			colors = clr;
+		}
+		
+		return colors;
+	}
+});
 
 MilkChart.Column = new Class({
     /**********************************
@@ -310,6 +273,8 @@ MilkChart.Column = new Class({
         this.getData();
         // Sets up bounds for the graph, key, and other paddings
         this.prepareCanvas();
+		// Set row width
+        this.rowWidth = Math.round(this.chartWidth / this.rows.length);
         // Draws the X and Y axes lines
         this.drawAxes();
         // Draws the value lines
@@ -318,53 +283,6 @@ MilkChart.Column = new Class({
         this.draw();
         // Draws the key for the graph
         if (this.options.showKey) this.drawKey();
-    },
-    prepareCanvas: function() {
-        this.element.setStyle('display', 'none');
-        
-        // Fill our canvas' bg color
-        this.ctx.fillStyle = this.options.background;
-        this.ctx.fillRect(0, 0, this.width, this.height);
-        
-        if (this.options.border) {
-            // Draw an outline
-            this.ctx.strokeRect(0,0,this.width, this.height);
-        }
-        
-        // Accomodate the value column width
-        this.valueColumnWidth = (this.bounds[1].x - this.bounds[0].x) * (String(this.maxY).length * .03);
-        this.bounds[0].x += this.valueColumnWidth;
-        
-        this.bounds[0].x += this.options.padding;
-        this.bounds[0].y += this.options.padding;
-        this.bounds[1].x -= this.options.padding;
-        this.bounds[1].y -= this.options.padding;
-        
-        this.bounds[1].y -= this.rowPadding;
-        
-        if (this.options.showKey) {
-            // Apply key padding
-            this.bounds[1].x -= this.keyPadding;
-            
-            // Set key bounds
-            this.keyBounds = [
-                new Point(this.bounds[1].x*1.02, this.bounds[0].y),
-                new Point(this.bounds[1].x*.5, this.bounds[1].y)
-            ];
-        }
-        
-        if (this.options.title) {
-            titleHeight = this.bounds[0].y + this.height * .1;
-            this.bounds[0].y = titleHeight;
-            this.titleBounds = [new Point(this.bounds[0].x, 0), new Point(this.bounds[1].x, titleHeight)];
-            this.drawTitle();
-        }
-        
-        this.chartWidth = this.bounds[1].x - this.bounds[0].x;
-        this.chartHeight = this.bounds[1].y - this.bounds[0].y;
-        
-        // Set widths
-        this.rowWidth = Math.round(this.chartWidth / this.rows.length);
     },
     getData: function() {
         // Set the column headers
@@ -419,7 +337,7 @@ MilkChart.Column = new Class({
             this.ctx.fillText(this.rowNames[rowNameID], rowOrigin.x+(this.rowWidth/2),this.bounds[1].y+(this.rowPadding/2));
             row.each(function(value) {
                 this.ctx.beginPath();
-                this.ctx.fillStyle = this.styles.colors[colorID];
+                this.ctx.fillStyle = this.colors[colorID];
                 colHeight = Math.ceil(value*this.ratio);
                 this.ctx.fillRect(rowOrigin.x+rowPadding, rowOrigin.y-colHeight, colWidth, colHeight);
                 rowOrigin.x += colWidth;
@@ -441,7 +359,7 @@ MilkChart.Column = new Class({
             this.ctx.fillStyle = this.options.fontColor;
             this.ctx.textAlign = "left";
             this.ctx.fillText(item, this.keyBounds[0].x + textMarginLeft, keyOrigin+8);
-            this.ctx.fillStyle = this.styles.colors[colorID];
+            this.ctx.fillStyle = this.colors[colorID];
             this.ctx.fillRect(Math.ceil(this.keyBounds[0].x),Math.ceil(keyOrigin),10,10);
             
             colorID++;
@@ -509,7 +427,7 @@ MilkChart.Bar = new Class({
             this.ctx.fillText(this.rowNames[rowNameID], rowOrigin.x-(this.colHeight/2),rowOrigin.y-(this.rowPadding/2));
             row.each(function(value) {
                 this.ctx.beginPath();
-                this.ctx.fillStyle = this.styles.colors[colorID];
+                this.ctx.fillStyle = this.colors[colorID];
                 colHeight = Math.ceil(value*this.ratio);
                 this.ctx.fillRect(rowOrigin.x, rowOrigin.y-rowPadding, colHeight, colWidth);
                 rowOrigin.y -= colWidth;
@@ -542,6 +460,8 @@ MilkChart.Line = new Class({
         this.getData();
         // Sets up bounds for the graph, key, and other paddings
         this.prepareCanvas();
+		// Set row width
+        this.rowWidth = this.chartWidth / this.rows[0].length;
         // Draws the X and Y axes lines
         this.drawAxes();
         // Draws the value lines
@@ -596,7 +516,7 @@ MilkChart.Line = new Class({
                 lineOrigin = this.bounds[0].x + rowCenter;
                 this.ctx.lineWidth = this.options.lineWeight;
                 this.ctx.beginPath();
-                this.ctx.strokeStyle = this.styles.colors[colorID];
+                this.ctx.strokeStyle = this.colors[colorID];
                 this.ctx.moveTo(rowOrigin.x+rowCenter, y - (row[0] * this.ratio));
                 row.each(function(value) {
                     pointCenter = rowOrigin.x + rowCenter;
@@ -611,11 +531,11 @@ MilkChart.Line = new Class({
             if (this.options.showTicks) {
                 rowOrigin = new Point(origin.x, origin.y);
                 lineOrigin = this.bounds[0].x + rowCenter;
-                shape = this.styles.shapes[shapeIndex];
+                shape = this.shapes[shapeIndex];
                 row.each(function(value) {
                     pointCenter = rowOrigin.x + rowCenter;
                     point = new Point(pointCenter, y - (value * this.ratio));
-                    shape(this.ctx, point.x, point.y, 10, this.styles.colors[colorID]);
+                    shape(this.ctx, point.x, point.y, 10, this.colors[colorID]);
                     
                     rowOrigin.x += this.rowWidth;
                     
@@ -637,8 +557,8 @@ MilkChart.Line = new Class({
             this.ctx.fillStyle = this.options.fontColor;
             this.ctx.textAlign = "left";
             this.ctx.fillText(item, this.keyBounds[0].x + 30, keyOrigin+5);
-            this.ctx.fillStyle = this.styles.colors[index];
-            this.ctx.strokeStyle = this.styles.colors[index];
+            this.ctx.fillStyle = this.colors[index];
+            this.ctx.strokeStyle = this.colors[index];
             this.ctx.lineWidth = 3;
             
             if (this.options.showLines) {
@@ -650,8 +570,8 @@ MilkChart.Line = new Class({
             }
             
             if (this.options.showTicks) {
-                shape = this.styles.shapes[index];
-                shape(this.ctx, this.keyBounds[0].x + 10, keyOrigin, 10, this.styles.colors[index]);
+                shape = this.shapes[index];
+                shape(this.ctx, this.keyBounds[0].x + 10, keyOrigin, 10, this.colors[index]);
             }
             
             keyOrigin += keyNameHeight;
@@ -765,7 +685,7 @@ MilkChart.Pie = new Class({
             this.ctx.fillRect(this.bounds[0].x,this.bounds[0].y,this.width,this.height);
         }
         this.rows.each(function(item, index) {
-            this.ctx.fillStyle = this.styles.colors[index];
+            this.ctx.fillStyle = this.colors[index];
             this.ctx.beginPath();
             this.ctx.arc(center.x, center.y, this.radius, (Math.PI/180)*arcStart, (Math.PI/180)*(item[1]+arcStart), false);
             this.ctx.lineTo(center.x, center.y);
@@ -814,7 +734,7 @@ MilkChart.Pie = new Class({
             this.ctx.fillStyle = this.options.fontColor;
             this.ctx.textAlign = "left";
             this.ctx.fillText(item, this.keyBounds[0].x + 14, keyOrigin+8);
-            this.ctx.fillStyle = this.styles.colors[colorID];
+            this.ctx.fillStyle = this.colors[colorID];
             this.ctx.fillRect(Math.ceil(this.keyBounds[0].x),Math.ceil(keyOrigin),10,10);
             
             colorID++;
@@ -823,3 +743,58 @@ MilkChart.Pie = new Class({
     }
 });
 
+// Shapes for tick marks
+MilkChart.Shapes = new Hash({
+	/*********************************************
+	 * This object is here for easy reference. Feel
+	 * free to add any additional shapes here.
+	 ********************************************/
+    square: function(ctx, x, y, size, color) {
+        ctx.fillStyle = color;
+        ctx.fillRect(x-(size/2), y-(size/2), size, size);
+    },
+    circle: function(ctx, x, y, size, color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.arc(x, y, size/2, 0, (Math.PI/180)*360, true);
+        ctx.closePath();
+        ctx.fill();
+    },
+    triangle: function(ctx, x,y,size,color) {
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        x -= size/2;
+        y -= size/2;
+        lr = new Point(x+size, y+size);
+        ctx.moveTo(x, lr.y);
+        ctx.lineTo(x + (size/2), y);
+        ctx.lineTo(lr.x, lr.y);
+        ctx.closePath();
+        ctx.fill();
+    },
+    cross: function(ctx,x,y,size,color) {
+        x -= size/2;
+        y -= size/2;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(x,y);
+        ctx.lineTo(x+size, y+size);
+        ctx.moveTo(x,y+size);
+        ctx.lineTo(x+size,y);
+        ctx.closePath();
+        ctx.stroke();
+    },
+    diamond: function(ctx,x,y,size,color) {
+        x -= size/2;
+        y -= size/2;
+        ctx.fillStyle = color;
+        ctx.beginPath();
+        ctx.moveTo(x+(size/2), y);
+        ctx.lineTo(x+size,y+(size/2));
+        ctx.lineTo(x+(size/2),y+size);
+        ctx.lineTo(x, y+(size/2));
+        ctx.closePath();
+        ctx.fill();
+    }
+})
