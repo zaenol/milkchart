@@ -2,7 +2,7 @@
 
 This is essentially the same as the [Line] graph, but different options enabled for convenience.
 
-www.brettdixon.com/static/scatter.jpg
+http://www.brettdixon.com/static/scatter.jpg
 
 = Syntax =
 
