@@ -1,6 +1,6 @@
 #summary Options for Bar
 
-http://img7.yfrog.com/img7/2991/barmr.jpg
+http://www.brettdixon.com/static/bar.jpg
 
 = Syntax =
 
