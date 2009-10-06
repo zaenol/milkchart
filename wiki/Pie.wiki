@@ -2,7 +2,7 @@
 
 The pie chart will draw a circle with the different rows as percentages of the circle.  This will only transform the first column of the tab;e supplied and ignore any others.
 
-www.brettdixon.com/static/pie.jpg
+http://www.brettdixon.com/static/pie.jpg
 
 = Syntax =
 
