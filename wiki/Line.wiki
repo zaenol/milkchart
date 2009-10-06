@@ -1,6 +1,6 @@
 #summary Options for Line
 
-http://img7.imageshack.us/img7/5084/linewl.jpg
+http://www.brettdixon.com/static/line.jpg
 
 = Syntax =
 
