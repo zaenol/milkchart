@@ -50,7 +50,7 @@ MilkChart = new Class({
     options: {
         width: 480,
         height: 290,
-		colors: ['#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4198af', '#db843d', '#93a9cf', '#d19392', '#b9cd96', '#a99bbd'],
+		colors: ['#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4198af', '#db843d'],
         padding: 12,
         font: "Verdana",
         fontColor: "#000000",
@@ -286,7 +286,8 @@ MilkChart = new Class({
 			while (colors.length != count) {
 				if (colorArray.length == 0) {
 					colorArray = clr.slice(0);
-					mix += 20;
+					// Add 10% to the mix
+					mix += 10;
 				}
 				newColor = new Color(colorArray.shift()).mix("#ffffff", mix);
 				colors.push(newColor.rgbToHex());
