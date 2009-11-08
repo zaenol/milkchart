@@ -20,6 +20,11 @@
  *  This library will generate a graph similar to Microsoft Excel.
  *  The constructor takes a table id, either string or element, and
  *  other options based on the graph type, see below for details.
+ *  
+ *  Has onFail event if it fails to build the chart.  This is mainly
+ *  used fored IE, but implemented for future uses.  You can allow it
+ *  to simply fail and render the table, or do something else with it
+ *  like put it into a grid widget or something.
  *
  *  This library can be used with $ safe mode, so feel free to
  *  use this with other frameworks.
@@ -41,7 +46,7 @@ var Point = new Class({
 });
 
 MilkChart = new Class({
-    Implements: Options,
+    Implements: [Options,Events],
     options: {
         width: 480,
         height: 290,
@@ -68,6 +73,12 @@ MilkChart = new Class({
     initialize: function(el, options) {
         this.setOptions(options);
         this.element = document.id(el);
+		// Fail if IE, no canvas support
+		if (Browser.Engine.trident) {
+			this.fireEvent('onFail', [this.element]);
+			return false
+		}
+		this.fireEvent('onFail');
         this.width = this.options.width;
         this.height = this.options.height;
         this.container = new Element('div', {width:this.width, height:this.height}).inject(this.element.getParent());
@@ -100,6 +111,7 @@ MilkChart = new Class({
         this.ctx.fillRect(0, 0, this.width, this.height);
         
         if (this.options.border) {
+			this.ctx.lineWeight = this.options.borderWeight;
             this.ctx.strokeRect(0,0,this.width, this.height);
         }
         
@@ -115,7 +127,12 @@ MilkChart = new Class({
         this.bounds[1].x -= this.options.padding;
         this.bounds[1].y -= this.options.padding;
 		
-		this.bounds[1].y -= this.rowPadding;
+		if (this.options.showRowNames) {
+			this.bounds[1].y -= this.rowPadding;
+		}
+		else {
+			this.rowPadding = 0;
+		}
         
         if (this.options.showKey) {
             // Apply key padding
@@ -170,41 +187,44 @@ MilkChart = new Class({
          * Next it draws in the lines and the values.  Also sets the ratio to apply
          * to the values in the table.
          *********************************/
-        dist = [1,2,5,10,20,50,100,150,500,1000];
-        maxLines = 9;
-        i = 0;
-        this.chartLines = 1;
-        delta = Math.floor((this.maxY - this.minY));
-        while (Math.floor((delta / dist[i])) > maxLines) {
-            i++;
-        }
-        this.chartLines = Math.floor((delta / dist[i])) + 2;
-        mult = dist[i];
-        negativeScale = (this.minY < 0) ? (mult + this.minY) : 0;
-        
-        // Set the bounds ratio
-        this.ratio = (this.chartHeight + this.options.padding) / (((this.chartLines-1) * mult) + (mult/2));
-        
-        this.ctx.font = this.options.fontSize + "px " + this.options.font;
-        this.ctx.textAlign = "right";
-        this.ctx.fillStyle = this.options.fontColor;
-        
-        boundsHeight = this.bounds[1].y - this.bounds[0].y;
-        lineHeight = Math.floor(boundsHeight / (this.chartLines - 1));
-        
-        for (i=0;i<this.chartLines;i++) {
-            this.ctx.fillStyle = this.options.fontColor;
-            lineY = this.bounds[1].y - (i * lineHeight);
-            
-            lineValue = (this.chartLines * mult) - ((this.chartLines-i) * mult) + this.minY - negativeScale;
-            this.ctx.beginPath();
-            // Correct values for crisp lines
-            lineY += .5;
-            this.ctx.moveTo(this.bounds[0].x - 4, lineY);
-            this.ctx.fillText(String(lineValue), this.bounds[0].x - 8, lineY + 3);
-            this.ctx.lineTo(this.bounds[1].x, lineY);
-            this.ctx.stroke();
-        }
+		
+		dist = [1, 2, 5, 10, 20, 50, 100, 150, 500, 1000];
+		maxLines = 9;
+		i = 0;
+		this.chartLines = 1;
+		delta = Math.floor((this.maxY - this.minY));
+		while (Math.floor((delta / dist[i])) > maxLines) {
+			i++;
+		}
+		this.chartLines = Math.floor((delta / dist[i])) + 2;
+		mult = dist[i];
+		negativeScale = (this.minY < 0) ? (mult + this.minY) : 0;
+		
+		// Set the bounds ratio
+		this.ratio = (this.chartHeight + this.options.padding) / (((this.chartLines - 1) * mult) + (mult / 2));
+		
+		this.ctx.font = this.options.fontSize + "px " + this.options.font;
+		this.ctx.textAlign = "right";
+		this.ctx.fillStyle = this.options.fontColor;
+		
+		boundsHeight = this.bounds[1].y - this.bounds[0].y;
+		lineHeight = Math.floor(boundsHeight / (this.chartLines - 1));
+		
+		for (i = 0; i < this.chartLines; i++) {
+			this.ctx.fillStyle = this.options.fontColor;
+			lineY = this.bounds[1].y - (i * lineHeight);
+			
+			lineValue = (this.chartLines * mult) - ((this.chartLines - i) * mult) + this.minY - negativeScale;
+			this.ctx.beginPath();
+			// Correct values for crisp lines
+			lineY += .5;
+			this.ctx.moveTo(this.bounds[0].x - 4, lineY);
+			if (this.options.showValues) {
+				this.ctx.fillText(String(lineValue), this.bounds[0].x - 8, lineY + 3);
+			}
+			this.ctx.lineTo(this.bounds[1].x, lineY);
+			this.ctx.stroke();
+			}
     },
     getData: function() {
         /**********************************
@@ -235,17 +255,28 @@ MilkChart = new Class({
     },
 	__getColors: function(clr) {
 		/**********************************
-		 * This accepts a single color to be a monochromatic gradient,
-		 * two colors as a gradient between the two,
-		 * or use the default colors.
+		 * This accepts a single color to be a monochromatic gradient
+		 * that will go from the given color to white, two colors as
+		 * a gradient between the two, or use the default colors.
 		 * 
 		 * Keyword args may be implemented for convenience.
+		 * i.e. "blue", "orange", etc.
 		 */
-		if (clr.length == 1) {
-			// Monochrome
-		}
-		else if (clr.length == 2) {
-			// Gradient
+		
+		if (clr.length == 1 || clr.length == 2) {
+			var min = new Color(clr[0]);
+			var max = (clr.length == 2) ? new Color(clr[1]) : new Color("#ffffff").mix(clr[0], 20);
+			var count = this.element.getElement('thead').getChildren()[0].getChildren().length;
+			var delta = [(max[0] - min[0])/count,(max[1] - min[1])/count,(max[2] - min[2])/count];
+			var startColor = min;
+			var colors = [];
+			
+			for (i=0;i<count;i++) {
+				for (j=0;j<delta.length;j++) {
+					startColor[j] += parseInt(delta[j]);
+				}
+				colors.push(startColor.rgbToHex());
+			}
 		}
 		else {
 			//Use default
@@ -265,7 +296,8 @@ MilkChart.Column = new Class({
     *********************************/
     Extends: MilkChart,
     options: {
-        
+        columnBorder: true,
+		columnBorderWeight: 3
     },
     initialize: function(el, options) {
         this.parent(el, options);
@@ -296,7 +328,6 @@ MilkChart.Column = new Class({
                 this.rowNames.push(item.get('html'));
             }.bind(this));
         }
-        
         // Get data from rows
         this.element.getElement('tbody').getChildren().each(function(row) {
             var dataRow = [];
@@ -334,12 +365,23 @@ MilkChart.Column = new Class({
             colorID = 0;
             this.ctx.fillStyle = this.options.fontColor;
             this.ctx.textAlign = "center"
-            this.ctx.fillText(this.rowNames[rowNameID], rowOrigin.x+(this.rowWidth/2),this.bounds[1].y+(this.rowPadding/2));
+			if (this.options.showRowNames) {
+				this.ctx.fillText(this.rowNames[rowNameID], rowOrigin.x+(this.rowWidth/2),this.bounds[1].y+(this.rowPadding/2));
+			}
+            
             row.each(function(value) {
                 this.ctx.beginPath();
                 this.ctx.fillStyle = this.colors[colorID];
                 colHeight = Math.ceil(value*this.ratio);
+				
+				this.ctx.fillStyle = this.colors[colorID];
                 this.ctx.fillRect(rowOrigin.x+rowPadding, rowOrigin.y-colHeight, colWidth, colHeight);
+				if (this.options.columnBorder) {
+					this.ctx.strokeStyle = "#fff";
+					this.ctx.lineWidth = this.options.columnBorderWeight;
+					this.ctx.strokeRect(rowOrigin.x+rowPadding, rowOrigin.y-colHeight, colWidth, colHeight);
+				}
+				
                 rowOrigin.x += colWidth;
                 colorID++;
             }.bind(this));
@@ -380,25 +422,31 @@ MilkChart.Bar = new Class({
         /**********************************
          * Draws horizontal value lines
          *********************************/
-        mult = 20;
-        lines = 2;
-        while ((Math.ceil((this.maxY - this.minY)) / mult) > lines) {
-            mult += 10;
-            lines++;
-        }
-        // Set the bounds ratio
-        this.ratio = this.chartWidth / (((lines-1) * mult) + this.minY);
-        
+		dist = [1, 2, 5, 10, 20, 50, 100, 150, 500, 1000];
+		maxLines = 9;
+		i = 0;
+		this.chartLines = 1;
+		delta = Math.floor((this.maxY - this.minY));
+		while (Math.floor((delta / dist[i])) > maxLines) {
+			i++;
+		}
+		this.chartLines = Math.floor((delta / dist[i])) + 2;
+		mult = dist[i];
+		negativeScale = (this.minY < 0) ? (mult + this.minY) : 0;
+		
+		// Set the bounds ratio
+		this.ratio = (this.chartWidth + this.options.padding) / (((this.chartLines - 1) * mult) + 1);
+		
         this.ctx.font = this.options.fontSize + "px " + this.options.font;
         this.ctx.textAlign = "center";
         this.ctx.fillStyle = this.options.fontColor;
         boundsHeight = this.bounds[1].y - this.bounds[0].y;
-        lineHeight = Math.floor(this.chartWidth / (lines - 1));
-        for (i=0;i<lines;i++) {
+        lineHeight = Math.ceil(this.chartWidth / (this.chartLines - 1));
+        for (i=0;i<this.chartLines;i++) {
             this.ctx.fillStyle = this.options.fontColor;
             //lineY = this.bounds[1].y - (i * lineHeight);
             lineX = this.bounds[0].x + (i * lineHeight);
-            lineValue = (lines * mult) - ((lines-i) * mult) + this.minY;
+            lineValue = (this.chartLines * mult) - ((this.chartLines-i) * mult) + this.minY;
             this.ctx.beginPath();
             // Correct values for crisp lines
             lineX = Math.round(lineX) + .5;
@@ -420,11 +468,10 @@ MilkChart.Bar = new Class({
         rowNameID = 0;
         this.rows.each(function(row) {
             rowOrigin = new Point(origin.x, origin.y);
-            
             colorID = 0;
             this.ctx.fillStyle = this.options.fontColor;
             this.ctx.textAlign = "center"
-            this.ctx.fillText(this.rowNames[rowNameID], rowOrigin.x-(this.colHeight/2),rowOrigin.y-(this.rowPadding/2));
+            this.ctx.fillText(this.rowNames[rowNameID], rowOrigin.x-(colWidth/2),rowOrigin.y-(this.rowPadding/2));
             row.each(function(value) {
                 this.ctx.beginPath();
                 this.ctx.fillStyle = this.colors[colorID];
