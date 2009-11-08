@@ -263,13 +263,14 @@ MilkChart = new Class({
 		 * i.e. "blue", "orange", etc.
 		 */
 		
+		var count = this.element.getElement('thead').getChildren()[0].getChildren().length;
+		var colors = [];
 		if (clr.length == 1 || clr.length == 2) {
 			var min = new Color(clr[0]);
+			// We either use the second color to get a gradient or use white mixed with 20% of the first color
 			var max = (clr.length == 2) ? new Color(clr[1]) : new Color("#ffffff").mix(clr[0], 20);
-			var count = this.element.getElement('thead').getChildren()[0].getChildren().length;
 			var delta = [(max[0] - min[0])/count,(max[1] - min[1])/count,(max[2] - min[2])/count];
 			var startColor = min;
-			var colors = [];
 			
 			for (i=0;i<count;i++) {
 				for (j=0;j<delta.length;j++) {
@@ -279,8 +280,18 @@ MilkChart = new Class({
 			}
 		}
 		else {
-			//Use default
-			colors = clr;
+			//Use default, but make sure we have enough!
+			var mix = 0;
+			var colorArray = clr.slice(0);
+			while (colors.length != count) {
+				if (colorArray.length == 0) {
+					colorArray = clr.slice(0);
+					mix += 20;
+				}
+				newColor = new Color(colorArray.shift()).mix("#ffffff", mix);
+				colors.push(newColor.rgbToHex());
+				console.log(newColor, clr, colorArray);
+			}
 		}
 		
 		return colors;
