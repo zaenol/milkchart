@@ -15,4 +15,4 @@ var chart = new MilkChart.Bar(table, [options])
 
 = Options =
 
- * No additional options
+ * Same as [Column]
