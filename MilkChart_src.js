@@ -22,9 +22,11 @@
  *  other options based on the graph type, see below for details.
  *  
  *  Has onFail event if it fails to build the chart.  This is mainly
- *  used fored IE, but implemented for future uses.  You can allow it
+ *  used for IE, but implemented for future uses.  You can allow it
  *  to simply fail and render the table, or do something else with it
  *  like put it into a grid widget or something.
+ *  
+ *  IE is broken due to the lack of proper text support in ExCanvas.
  *
  *  This library can be used with $ safe mode, so feel free to
  *  use this with other frameworks.
@@ -50,7 +52,7 @@ MilkChart = new Class({
     options: {
         width: 480,
         height: 290,
-		colors: ['#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4198af', '#db843d'],
+		colors: ['#4f81bd', '#c0504d', '#9bbb59', '#8064a2', '#4198af', '#db843d', '#93a9cf', '#d19392', '#b9cd96', '#a99bbd'],
         padding: 12,
         font: "Verdana",
         fontColor: "#000000",
@@ -67,22 +69,20 @@ MilkChart = new Class({
         showRowNames: true,
         showValues: true,
         showKey: true,
-		useZero: true,
-        useFooter: false
+		useZero: true
     },
     initialize: function(el, options) {
         this.setOptions(options);
         this.element = document.id(el);
-		// Fail if IE, no canvas support
-		if (Browser.Engine.trident) {
-			this.fireEvent('onFail', [this.element]);
-			return false
-		}
-		this.fireEvent('onFail');
         this.width = this.options.width;
         this.height = this.options.height;
         this.container = new Element('div', {width:this.width, height:this.height}).inject(this.element.getParent());
         this._canvas = new Element('canvas', {width:this.options.width,height:this.options.height}).inject(this.container);
+		if (Browser.Engine.trident) {
+			// Fail for IE.  Waiting for proper text support
+			G_vmlCanvasManager.initElement(this._canvas);
+			return false
+		}
         this.ctx = this._canvas.getContext('2d');
         this.colNames = [];
         this.rowNames = [];
@@ -102,10 +102,11 @@ MilkChart = new Class({
         MilkChart.Shapes.each(function(shape) {
             this.shapes.push(shape);
         }.bind(this));
+		return true
     },
     prepareCanvas: function() {
         this.element.setStyle('display', 'none');
-        
+		
         // Fill our canvas' bg color
         this.ctx.fillStyle = this.options.background;
         this.ctx.fillRect(0, 0, this.width, this.height);
@@ -286,12 +287,11 @@ MilkChart = new Class({
 			while (colors.length != count) {
 				if (colorArray.length == 0) {
 					colorArray = clr.slice(0);
-					// Add 10% to the mix
-					mix += 10;
+					mix += 20;
 				}
 				newColor = new Color(colorArray.shift()).mix("#ffffff", mix);
 				colors.push(newColor.rgbToHex());
-				console.log(newColor, clr, colorArray);
+				
 			}
 		}
 		
@@ -308,34 +308,35 @@ MilkChart.Column = new Class({
     *********************************/
     Extends: MilkChart,
     options: {
-        columnBorder: true,
-		columnBorderWeight: 3
+        columnBorder: false,
+		columnBorderWeight: 2,
+		columnBorderColor: "#ffffff"
     },
     initialize: function(el, options) {
-        this.parent(el, options);
-        // Parse the data from the table
-        this.getData();
-        // Sets up bounds for the graph, key, and other paddings
-        this.prepareCanvas();
-		// Set row width
-        this.rowWidth = Math.round(this.chartWidth / this.rows.length);
-        // Draws the X and Y axes lines
-        this.drawAxes();
-        // Draws the value lines
-        this.drawValueLines();
-        // Main function to draw the graph
-        this.draw();
-        // Draws the key for the graph
-        if (this.options.showKey) this.drawKey();
+        if (this.parent(el, options)) {
+			// Parse the data from the table
+	        this.getData();
+	        // Sets up bounds for the graph, key, and other paddings
+	        this.prepareCanvas();
+			// Set row width
+	        this.rowWidth = Math.round(this.chartWidth / this.rows.length);
+	        // Draws the X and Y axes lines
+	        this.drawAxes();
+	        // Draws the value lines
+	        this.drawValueLines();
+	        // Main function to draw the graph
+	        this.draw();
+	        // Draws the key for the graph
+	        if (this.options.showKey) this.drawKey();
+		}
     },
     getData: function() {
         // Set the column headers
         this.element.getElement('thead').getChildren()[0].getChildren().each(function(item) {
            this.colNames.push(item.get('html'));
-        }.bind(this));
-        // If the footer will be used, get the row names from there
-        // otherwise, get them when processing the rows
-        if (this.options.useFooter) {
+        }, this);
+		// If the table has a footer, use this for row names
+        if (this.element.getElement('tfoot')) {
             this.element.getElement('tfoot').getChildren()[0].getChildren().each(function(item) {
                 this.rowNames.push(item.get('html'));
             }.bind(this));
@@ -355,12 +356,6 @@ MilkChart.Column = new Class({
             this.rows.push(dataRow);
             
         }.bind(this));
-        // Get the first element as row name
-        if (!this.options.useFooter) {
-            for (i=1;i<=this.rows.length;i++) {
-                this.rowNames.push("Row " + i)
-            }
-        }
     },
     draw: function() {
         /*************************************
@@ -389,7 +384,7 @@ MilkChart.Column = new Class({
 				this.ctx.fillStyle = this.colors[colorID];
                 this.ctx.fillRect(rowOrigin.x+rowPadding, rowOrigin.y-colHeight, colWidth, colHeight);
 				if (this.options.columnBorder) {
-					this.ctx.strokeStyle = "#fff";
+					this.ctx.strokeStyle = this.options.columnBorderColor;
 					this.ctx.lineWidth = this.options.columnBorderWeight;
 					this.ctx.strokeRect(rowOrigin.x+rowPadding, rowOrigin.y-colHeight, colWidth, colHeight);
 				}
@@ -489,6 +484,11 @@ MilkChart.Bar = new Class({
                 this.ctx.fillStyle = this.colors[colorID];
                 colHeight = Math.ceil(value*this.ratio);
                 this.ctx.fillRect(rowOrigin.x, rowOrigin.y-rowPadding, colHeight, colWidth);
+				if (this.options.columnBorder) {
+					this.ctx.strokeStyle = this.options.columnBorderColor;
+					this.ctx.lineWidth = this.options.columnBorderWeight;
+					this.ctx.strokeRect(rowOrigin.x, rowOrigin.y-rowPadding, colHeight, colWidth);
+				}
                 rowOrigin.y -= colWidth;
                 colorID++;
             }.bind(this));
@@ -514,21 +514,22 @@ MilkChart.Line = new Class({
         lineWeight: 3
     },
     initialize: function(el, options) {
-        this.parent(el, options);
-        // Parse the data from the table
-        this.getData();
-        // Sets up bounds for the graph, key, and other paddings
-        this.prepareCanvas();
-		// Set row width
-        this.rowWidth = this.chartWidth / this.rows[0].length;
-        // Draws the X and Y axes lines
-        this.drawAxes();
-        // Draws the value lines
-        this.drawValueLines();
-        // Main function to draw the graph
-        this.draw();
-        // Draws the key for the graph
-        if (this.options.showKey) this.drawKey();
+        if (this.parent(el, options)) {
+			// Parse the data from the table
+	        this.getData();
+	        // Sets up bounds for the graph, key, and other paddings
+	        this.prepareCanvas();
+			// Set row width
+	        this.rowWidth = this.chartWidth / this.rows[0].length;
+	        // Draws the X and Y axes lines
+	        this.drawAxes();
+	        // Draws the value lines
+	        this.drawValueLines();
+	        // Main function to draw the graph
+	        this.draw();
+	        // Draws the key for the graph
+	        if (this.options.showKey) this.drawKey();
+		}
     },
     getData: function() {
         // Line and Scatter graphs use colums instead of rows to define objects
@@ -695,17 +696,17 @@ MilkChart.Pie = new Class({
         useFooter: true
     },
     initialize: function(el, options) {        
-        this.parent(el, options);
-        // Parse the data from the table
-        this.getData();
-        // Sets up bounds for the graph, key, and other paddings
-        this.prepareCanvas();
-        this.radius = (this.chartHeight / 2)*1.1;
-        // Draws the key for the graph
-        if (this.options.showKey) this.drawKey();
-        // Main function to draw the graph
-        this.draw();
-        
+        if (this.parent(el, options)) {
+			// Parse the data from the table
+	        this.getData();
+	        // Sets up bounds for the graph, key, and other paddings
+	        this.prepareCanvas();
+	        this.radius = (this.chartHeight / 2)*1.1;
+	        // Draws the key for the graph
+	        if (this.options.showKey) this.drawKey();
+	        // Main function to draw the graph
+	        this.draw();
+		}
     },
     getData: function() {
         if (this.element.getElement('tfoot')) {
@@ -799,7 +800,50 @@ MilkChart.Pie = new Class({
             colorID++;
             keyOrigin += keyNameHeight;
         }.bind(this))
-    }
+    },
+	__getColors: function(clr) {
+		/**********************************
+		 * This accepts a single color to be a monochromatic gradient
+		 * that will go from the given color to white, two colors as
+		 * a gradient between the two, or use the default colors.
+		 * 
+		 * Keyword args may be implemented for convenience.
+		 * i.e. "blue", "orange", etc.
+		 */
+		
+		var count = this.element.getElement('tbody').getChildren().length;
+		var colors = [];
+		if (clr.length == 1 || clr.length == 2) {
+			var min = new Color(clr[0]);
+			// We either use the second color to get a gradient or use white mixed with 20% of the first color
+			var max = (clr.length == 2) ? new Color(clr[1]) : new Color("#ffffff").mix(clr[0], 20);
+			var delta = [(max[0] - min[0])/count,(max[1] - min[1])/count,(max[2] - min[2])/count];
+			var startColor = min;
+			
+			for (i=0;i<count;i++) {
+				for (j=0;j<delta.length;j++) {
+					startColor[j] += parseInt(delta[j]);
+				}
+				colors.push(startColor.rgbToHex());
+			}
+		}
+		else {
+			//Use default, but make sure we have enough!
+			var mix = 0;
+			var colorArray = clr.slice(0);
+			while (colors.length != count) {
+				if (colorArray.length == 0) {
+					colorArray = clr.slice(0);
+					mix += 20;
+				}
+				newColor = new Color(colorArray.shift()).mix("#ffffff", mix);
+				colors.push(newColor.rgbToHex());
+				console.log(mix);
+			}
+		}
+		
+		return colors;
+	}
 });
 
 // Shapes for tick marks
