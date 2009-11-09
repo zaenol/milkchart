@@ -17,4 +17,4 @@ var chart = new MilkChart.Column(table, [options])
 
  * columnBorder - (bool:Defaults to false) Draws borders around each column
  * columnBorderWeight - (int:Defaults to 2) Width of border in pixels
- * columnBorderColor - (Color:Defaults to #FFFFFF) Color of the border
+ * columnBorderColor - (string:Defaults to #FFFFFF) Color of the border
